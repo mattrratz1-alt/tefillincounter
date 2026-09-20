@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#1a1510" />
+  <title>TefillinCounter</title>
+  <link rel="icon" href="assets/icon.png" />
+  <style>
+    :root {
+      --gold: #f0c96a;
+      --gold-deep: #b87a2e;
+      --glass: rgba(20, 16, 12, 0.45);
+      --stroke: rgba(255, 255, 255, 0.18);
+      --text: #fff8ec;
+      --muted: rgba(255, 248, 236, 0.72);
+      --wrap: rgba(51, 97, 61, 0.78);
+      --skip: rgba(107, 41, 36, 0.82);
+      --later: rgba(107, 82, 26, 0.85);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
+      color: var(--text);
+      background: transparent;
+    }
+    body.he { direction: rtl; }
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-color: #120e0a;
+      background-image:
+        linear-gradient(180deg, rgba(0,0,0,.45), rgba(18,14,10,.62)),
+        url("assets/temple.jpg");
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+    }
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 18px 16px 36px;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .top-row {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .lang-btn, button.primary, .nav-btn {
+      appearance: none;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 13px/1 system-ui, sans-serif;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+    h1 {
+      margin: 0;
+      text-align: center;
+      font-size: clamp(1.2rem, 4.2vw, 1.7rem);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #ffe9b3, #f0c96a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,.75));
+    }
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--stroke);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      backdrop-filter: blur(16px);
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+    .hint {
+      font-family: system-ui, sans-serif;
+      font-size: .8rem;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    label {
+      display: block;
+      font-family: system-ui, sans-serif;
+      font-size: .85rem;
+      font-weight: 600;
+      margin: 10px 0 6px;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 0;
+      background: rgba(0,0,0,.28);
+      color: #fff;
+      font: 500 1rem/1.2 system-ui, sans-serif;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      font-family: system-ui, sans-serif;
+    }
+    .row + .row { border-top: 1px solid rgba(255,255,255,.08); }
+    .toggle {
+      position: relative;
+      width: 46px;
+      height: 28px;
+      flex: 0 0 auto;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle span {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,.2);
+      cursor: pointer;
+      transition: .2s;
+    }
+    .toggle span::after {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      top: 3px;
+      left: 3px;
+      border-radius: 50%;
+      background: #fff;
+      transition: .2s;
+    }
+    .toggle input:checked + span { background: var(--gold-deep); }
+    .toggle input:checked + span::after { transform: translateX(18px); }
+    button.primary {
+      width: 100%;
+      margin-top: 14px;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 1rem;
+      color: #2a1a08;
+      background: linear-gradient(90deg, #dbad52, #b87a2e);
+    }
+    .result-day {
+      font-size: 1.35rem;
+      color: var(--gold);
+      margin: 4px 0 10px;
+    }
+    .meta { font-family: system-ui, sans-serif; font-size: .9rem; margin: 6px 0; }
+    .meta small { display: block; color: var(--muted); font-size: .75rem; }
+    .month-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 8px 0 12px;
+      font-family: system-ui, sans-serif;
+    }
+    .nav-btn { width: 36px; height: 36px; padding: 0; border-radius: 10px; }
+    .weekdays, .grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      font-family: system-ui, sans-serif;
+    }
+    .weekdays div {
+      text-align: center;
+      font-size: .72rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .day {
+      min-height: 54px;
+      border-radius: 10px;
+      padding: 4px 2px;
+      text-align: center;
+      background: rgba(0,0,0,.22);
+      border: 1.5px solid transparent;
+    }
+    .day.empty { background: transparent; }
+    .day.today { border-color: var(--gold); }
+    .day.wrap { background: var(--wrap); }
+    .day.skip { background: var(--skip); }
+    .day.later { background: var(--later); }
+    .day .n { font-size: .75rem; font-weight: 700; }
+    .day .s {
+      margin-top: 2px;
+      font-size: .65rem;
+      font-weight: 700;
+      color: #d9ffe0;
+    }
+    .day.skip .s { color: #ffc8c0; font-size: .58rem; }
+    .day.later .s { color: #ffe29a; }
+    .legend {
+      font-family: system-ui, sans-serif;
+      font-size: .75rem;
+      color: var(--muted);
+      display: grid;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    .legend i {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-inline-end: 6px;
+    }
+    .error { color: #ffb09a; font-family: system-ui, sans-serif; font-size: .85rem; }
+    .watermark {
+      text-align: center;
+      margin-top: 18px;
+      letter-spacing: .12em;
+      font-size: .85rem;
+      color: rgba(255, 233, 179, .7);
+    }
+    .status-pill {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-family: system-ui, sans-serif;
+      font-size: .8rem;
+      background: rgba(0,0,0,.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="wrap">
+    <header>
+      <div class="top-row">
+        <button class="lang-btn" id="langBtn" type="button">עב</button>
+      </div>
+      <h1 id="title">bringing mashiach with every wrap</h1>
+    </header>
+
+    <section class="card">
+      <p class="hint" id="editHint">Editable — updates when you open the app</p>
+      <label id="lblCurrent">Current streak day</label>
+      <input id="currentStreak" type="number" min="0" step="1" />
+      <label id="lblTarget">Target streak day</label>
+      <input id="targetStreak" type="number" min="1" step="1" />
+      <div class="error" id="error" hidden></div>
+      <button class="primary" id="calcBtn" type="button">Calculate</button>
+    </section>
+
+    <section class="card" id="resultCard" hidden>
+      <h2 id="resultTitle">You will reach that day on</h2>
+      <div class="result-day" id="resultDay"></div>
+      <div class="meta"><small id="lblGreg">Gregorian</small><div id="resultGreg"></div></div>
+      <div class="meta"><small id="lblHeb">Hebrew</small><div id="resultHeb"></div></div>
+      <div class="status-pill" id="resultNote" hidden></div>
+    </section>
+
+    <section class="card">
+      <h2 id="settingsTitle">Reminders</h2>
+      <div class="row">
+        <span id="lblIsrael">Israel minhag</span>
+        <label class="toggle"><input id="inIsrael" type="checkbox" /><span></span></label>
+      </div>
+      <p class="hint" id="israelHint">One-day Yom Tov (except Rosh Hashanah). Chabad: no tefillin on Chol HaMoed.</p>
+    </section>
+
+    <section class="card" id="calendar">
+      <h2 id="calTitle">Streak calendar</h2>
+      <div class="legend">
+        <div><i style="background:#73b87a"></i><span id="legWrap">Wrap day + streak #</span></div>
+        <div><i style="background:#c76152"></i><span id="legSkip">No-wrap day</span></div>
+        <div><i style="background:#ebc047"></i><span id="legLater">Tisha B'Av — wrap at Mincha</span></div>
+      </div>
+      <div class="month-nav">
+        <button class="nav-btn" id="prevMonth" type="button">‹</button>
+        <strong id="monthLabel"></strong>
+        <button class="nav-btn" id="nextMonth" type="button">›</button>
+      </div>
+      <div class="weekdays" id="weekdays"></div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <div class="watermark">AdyrStudios ✡</div>
+  </div>
+
+  <script>
+    const STORE_KEY = "tefillinCounter.v1";
+    const MONTHS_EN = {
+      Tishri: 1, Tishrei: 1, Heshvan: 2, Cheshvan: 2, Kislev: 3, Tevet: 4, Shevat: 5,
+      Adar: 6, "Adar I": 6, "Adar II": 7, Nisan: 8, Iyar: 9, Sivan: 10, Tamuz: 11, Tammuz: 11, Av: 12, Elul: 13
+    };
+
+    const i18n = {
+      en: {
+        title: "BRINGING MASHIACH WITH EVERY WRAP",
+        langBtn: "עב",
+        editHint: "Editable — updates when you open the page",
+        current: "Current streak day",
+        target: "Target streak day",
+        calculate: "Calculate",
+        resultTitle: "You will reach that day on",
+        greg: "Gregorian",
+        heb: "Hebrew",
+        settings: "Settings",
+        israel: "Israel minhag",
+        israelHint: "One-day Yom Tov (except Rosh Hashanah). Chabad: no tefillin on Chol HaMoed.",
+        calTitle: "Streak calendar",
+        legWrap: "Wrap day + streak #",
+        legSkip: "No-wrap day",
+        legLater: "Tisha B'Av — wrap at Mincha",
+        invalid: "Enter a valid target",
+        doNotWrap: "Do not wrap today",
+        wrapLater: "Wrap later (Mincha)",
+        day: (n) => `Day ${n}`,
+        weekdays: ["S","M","T","W","T","F","S"],
+        skips: {
+          shabbat: "Shabbat", roshHashanah: "Rosh Hashanah", yomKippur: "Yom Kippur",
+          sukkot: "Sukkot", sheminiAtzeret: "Shemini Atzeret", simchatTorah: "Simchat Torah",
+          pesach: "Passover", shavuot: "Shavuot",
+          cholHamoedSukkot: "Chol HaMoed Sukkot", cholHamoedPesach: "Chol HaMoed Passover"
+        }
+      },
+      he: {
+        title: "מביאים את המשיח עם כל הנחה",
+        langBtn: "EN",
+        editHint: "ניתן לערוך — מתעדכן בפתיחת הדף",
+        current: "יום רצף נוכחי",
+        target: "יום יעד",
+        calculate: "חשב",
+        resultTitle: "תגיע ליום היעד ב־",
+        greg: "לוח לועזי",
+        heb: "לוח עברי",
+        settings: "הגדרות",
+        israel: "מנהג ארץ ישראל",
+        israelHint: "יום טוב יום אחד (חוץ מראש השנה). חב״ד: אין תפילין בחול המועד.",
+        calTitle: "לוח רצף",
+        legWrap: "יום הנחה + מספר רצף",
+        legSkip: "יום ללא הנחה",
+        legLater: "תשעה באב — מניחים במנחה",
+        invalid: "הזן יעד חוקי",
+        doNotWrap: "היום אין מניחים",
+        wrapLater: "מניחים במנחה",
+        day: (n) => `יום ${n}`,
+        weekdays: ["א","ב","ג","ד","ה","ו","ש"],
+        skips: {
+          shabbat: "שבת", roshHashanah: "ראש השנה", yomKippur: "יום כיפור",
+          sukkot: "סוכות", sheminiAtzeret: "שמיני עצרת", simchatTorah: "שמחת תורה",
+          pesach: "פסח", shavuot: "שבועות",
+          cholHamoedSukkot: "חול המועד סוכות", cholHamoedPesach: "חול המועד פסח"
+        }
+      }
+    };
+
+    let state = loadState();
+    let visibleMonth = startOfMonth(new Date());
+    let lastResult = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+      return {
+        currentStreak: 1,
+        targetStreak: 100,
+        useHebrew: false,
+        inIsrael: false,
+        lastSyncedDay: null
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    }
+
+    function startOfDay(d) {
+      const x = new Date(d);
+      x.setHours(0,0,0,0);
+      return x;
+    }
+
+    function startOfMonth(d) {
+      return new Date(d.getFullYear(), d.getMonth(), 1);
+    }
+
+    function addDays(d, n) {
+      const x = startOfDay(d);
+      x.setDate(x.getDate() + n);
+      return x;
+    }
+
+    function sameDay(a, b) {
+      return startOfDay(a).getTime() === startOfDay(b).getTime();
+    }
+
+    function hebrewInfo(date) {
+      const fmt = new Intl.DateTimeFormat("en-US-u-ca-hebrew", {
+        year: "numeric", month: "long", day: "numeric"
+      });
+      const parts = Object.fromEntries(fmt.formatToParts(date).filter(p => p.type !== "literal").map(p => [p.type, p.value]));
+      let monthName = parts.month;
+      // Intl may return "Adar I" / "Adar II"
+      let month = MONTHS_EN[monthName];
+      if (!month && monthName && monthName.startsWith("Adar")) month = monthName.includes("II") || monthName.includes("2") ? 7 : 6;
+      return {
+        year: parseInt(parts.year, 10),
+        month: month || 0,
+        day: parseInt(parts.day, 10),
+        monthName
+      };
+    }
+
+    function hebrewString(date, he) {
+      const h = hebrewInfo(date);
+      if (he) {
+        const names = {
+          1:"תשרי",2:"חשון",3:"כסלו",4:"טבת",5:"שבט",6:"אדר",7:"אדר ב׳",
+          8:"ניסן",9:"אייר",10:"סיון",11:"תמוז",12:"אב",13:"אלול"
+        };
+        return `${h.day} ${names[h.month] || h.monthName} ${h.year}`;
+      }
+      return `${h.monthName} ${h.day}, ${h.year}`;
+    }
+
+    function classify(date, inIsrael) {
+      if (date.getDay() === 6) return { kind: "skip", reason: "shabbat" };
+      const h = hebrewInfo(date);
+      const { month, day } = h;
+
+      if (month === 1) {
+        if (day === 1 || day === 2) return { kind: "skip", reason: "roshHashanah" };
+        if (day === 10) return { kind: "skip", reason: "yomKippur" };
+        if (inIsrael) {
+          if (day === 15) return { kind: "skip", reason: "sukkot" };
+          if (day >= 16 && day <= 21) return { kind: "skip", reason: "cholHamoedSukkot" };
+          if (day === 22) return { kind: "skip", reason: "sheminiAtzeret" };
+        } else {
+          if (day === 15 || day === 16) return { kind: "skip", reason: "sukkot" };
+          if (day >= 17 && day <= 21) return { kind: "skip", reason: "cholHamoedSukkot" };
+          if (day === 22) return { kind: "skip", reason: "sheminiAtzeret" };
+          if (day === 23) return { kind: "skip", reason: "simchatTorah" };
+        }
+      }
+
+      if (month === 8) {
+        if (inIsrael) {
+          if (day === 15 || day === 21) return { kind: "skip", reason: "pesach" };
+          if (day >= 16 && day <= 20) return { kind: "skip", reason: "cholHamoedPesach" };
+        } else {
+          if (day === 15 || day === 16) return { kind: "skip", reason: "pesach" };
+          if (day >= 17 && day <= 20) return { kind: "skip", reason: "cholHamoedPesach" };
+          if (day === 21 || day === 22) return { kind: "skip", reason: "pesach" };
+        }
+      }
+
+      if (month === 10) {
+        if (inIsrael) {
+          if (day === 6) return { kind: "skip", reason: "shavuot" };
+        } else if (day === 6 || day === 7) {
+          return { kind: "skip", reason: "shavuot" };
+        }
+      }
+
+      if (month === 12 && day === 9) return { kind: "later" };
+      return { kind: "wrap" };
+    }
+
+    function isWrap(date) {
+      const k = classify(date, state.inIsrael).kind;
+      return k === "wrap" || k === "later";
+    }
+
+    function wrappingDaysAfter(fromDay, throughDay) {
+      let count = 0;
+      let cursor = addDays(fromDay, 1);
+      const end = startOfDay(throughDay);
+      while (cursor <= end) {
+        if (isWrap(cursor)) count++;
+        cursor = addDays(cursor, 1);
+      }
+      return count;
+    }
+
+    function syncStreak() {
+      const today = startOfDay(new Date());
+      const key = today.toISOString().slice(0, 10);
+      if (!state.lastSyncedDay) {
+        state.lastSyncedDay = key;
+        saveState();
+        return;
+      }
+      if (state.lastSyncedDay === key) return;
+      const last = startOfDay(new Date(state.lastSyncedDay + "T12:00:00"));
+      const added = wrappingDaysAfter(last, today);
+      if (added > 0) state.currentStreak += added;
+      state.lastSyncedDay = key;
+      saveState();
+    }
+
+    function dateForTarget(current, target, asOf) {
+      const today = startOfDay(asOf);
+      if (target <= 0) return null;
+      if (target === current) {
+        if (isWrap(today)) return today;
+        let c = addDays(today, -1);
+        for (let i = 0; i < 400; i++) {
+          if (isWrap(c)) return c;
+          c = addDays(c, -1);
+        }
+        return null;
+      }
+      if (target > current) {
+        let remaining = target - current;
+        let c = addDays(today, 1);
+        for (let i = 0; i < Math.max(remaining * 3 + 400, 50000); i++) {
+          if (isWrap(c)) {
+            remaining--;
+            if (remaining === 0) return c;
+          }
+          c = addDays(c, 1);
+        }
+        return null;
+      }
+      let remaining = current - target;
+      let c = isWrap(today) ? addDays(today, -1) : today;
+      for (let i = 0; i < Math.max(remaining * 3 + 400, 50000); i++) {
+        if (isWrap(c)) {
+          remaining--;
+          if (remaining === 0) return c;
+        }
+        c = addDays(c, -1);
+      }
+      return null;
+    }
+
+    function streakNumber(date, current, asOf) {
+      const day = startOfDay(date);
+      const today = startOfDay(asOf);
+      if (!isWrap(day)) return null;
+      if (sameDay(day, today)) return current;
+      if (day > today) {
+        let n = current;
+        let c = addDays(today, 1);
+        while (c <= day) {
+          if (isWrap(c)) n++;
+          c = addDays(c, 1);
+        }
+        return n;
+      }
+      let n = current;
+      let cursor = today;
+      if (!isWrap(today)) {
+        cursor = addDays(today, -1);
+        while (!isWrap(cursor)) cursor = addDays(cursor, -1);
+      }
+      while (cursor > day) {
+        if (isWrap(cursor)) n--;
+        cursor = addDays(cursor, -1);
+      }
+      return n;
+    }
+
+    function t() {
+      return state.useHebrew ? i18n.he : i18n.en;
+    }
+
+    function applyI18n() {
+      const L = t();
+      document.body.classList.toggle("he", state.useHebrew);
+      title.textContent = L.title;
+      langBtn.textContent = L.langBtn;
+      editHint.textContent = L.editHint;
+      lblCurrent.textContent = L.current;
+      lblTarget.textContent = L.target;
+      calcBtn.textContent = L.calculate;
+      resultTitle.textContent = L.resultTitle;
+      lblGreg.textContent = L.greg;
+      lblHeb.textContent = L.heb;
+      settingsTitle.textContent = L.settings;
+      lblIsrael.textContent = L.israel;
+      israelHint.textContent = L.israelHint;
+      calTitle.textContent = L.calTitle;
+      legWrap.textContent = L.legWrap;
+      legSkip.textContent = L.legSkip;
+      legLater.textContent = L.legLater;
+      weekdays.innerHTML = L.weekdays.map(d => `<div>${d}</div>`).join("");
+    }
+
+    function shortSkip(reason) {
+      const mapEn = { shabbat:"Shab", roshHashanah:"RH", yomKippur:"YK", sukkot:"Suk", cholHamoedSukkot:"Suk", sheminiAtzeret:"SA", simchatTorah:"ST", pesach:"Pes", cholHamoedPesach:"Pes", shavuot:"Shav" };
+      const mapHe = { shabbat:"שבת", roshHashanah:"ר״ה", yomKippur:"כיפור", sukkot:"סוכות", cholHamoedSukkot:"סוכות", sheminiAtzeret:"שמ״ע", simchatTorah:"שמח״ת", pesach:"פסח", cholHamoedPesach:"פסח", shavuot:"שבועות" };
+      return (state.useHebrew ? mapHe : mapEn)[reason] || "";
+    }
+
+    function renderCalendar() {
+      const L = t();
+      const monthDate = visibleMonth;
+      monthLabel.textContent = monthDate.toLocaleDateString(state.useHebrew ? "he-IL" : "en-US", { month: "long", year: "numeric" });
+      const first = startOfMonth(monthDate);
+      const startPad = first.getDay();
+      const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+      const today = startOfDay(new Date());
+      let html = "";
+      for (let i = 0; i < startPad; i++) html += `<div class="day empty"></div>`;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(first.getFullYear(), first.getMonth(), d);
+        const status = classify(date, state.inIsrael);
+        let cls = "day ";
+        let sub = "";
+        if (status.kind === "skip") {
+          cls += "skip";
+          sub = shortSkip(status.reason);
+        } else if (status.kind === "later") {
+          cls += "later";
+          const sn = streakNumber(date, state.currentStreak, today);
+          sub = sn != null ? String(sn) : "!";
+        } else {
+          cls += "wrap";
+          const sn = streakNumber(date, state.currentStreak, today);
+          sub = sn != null ? String(sn) : "•";
+        }
+        if (sameDay(date, today)) cls += " today";
+        html += `<div class="${cls}"><div class="n">${d}</div><div class="s">${sub}</div></div>`;
+      }
+      grid.innerHTML = html;
+    }
+
+    function calculate() {
+      const L = t();
+      const current = Number(currentStreak.value);
+      const target = Number(targetStreak.value);
+      state.currentStreak = current;
+      state.targetStreak = target;
+      state.lastSyncedDay = startOfDay(new Date()).toISOString().slice(0, 10);
+      saveState();
+
+      if (!target || target < 1) {
+        error.hidden = false;
+        error.textContent = L.invalid;
+        resultCard.hidden = true;
+        return;
+      }
+      error.hidden = true;
+      const date = dateForTarget(current, target, new Date());
+      if (!date) {
+        error.hidden = false;
+        error.textContent = L.invalid;
+        return;
+      }
+      lastResult = { date, target };
+      const status = classify(date, state.inIsrael);
+      resultCard.hidden = false;
+      resultDay.textContent = L.day(target);
+      resultGreg.textContent = date.toLocaleDateString(state.useHebrew ? "he-IL" : "en-US", { dateStyle: "long" });
+      resultHeb.textContent = hebrewString(date, state.useHebrew);
+      if (status.kind === "later") {
+        resultNote.hidden = false;
+        resultNote.textContent = "Tisha B'Av — " + L.wrapLater;
+      } else if (status.kind === "skip") {
+        resultNote.hidden = false;
+        resultNote.textContent = L.skips[status.reason];
+      } else {
+        resultNote.hidden = true;
+      }
+      const rangeStart = addDays(new Date(), -365);
+      const rangeEnd = addDays(new Date(), 365);
+      if (date >= rangeStart && date <= rangeEnd) visibleMonth = startOfMonth(date);
+      renderCalendar();
+      document.getElementById("calendar").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    // wire UI
+    const $ = (id) => document.getElementById(id);
+    const title = $("title"), langBtn = $("langBtn"), editHint = $("editHint");
+    const lblCurrent = $("lblCurrent"), lblTarget = $("lblTarget"), calcBtn = $("calcBtn");
+    const currentStreak = $("currentStreak"), targetStreak = $("targetStreak"), error = $("error");
+    const resultCard = $("resultCard"), resultTitle = $("resultTitle"), resultDay = $("resultDay");
+    const lblGreg = $("lblGreg"), lblHeb = $("lblHeb"), resultGreg = $("resultGreg"), resultHeb = $("resultHeb"), resultNote = $("resultNote");
+    const settingsTitle = $("settingsTitle"), lblIsrael = $("lblIsrael"), israelHint = $("israelHint"), inIsrael = $("inIsrael");
+    const calTitle = $("calTitle"), legWrap = $("legWrap"), legSkip = $("legSkip"), legLater = $("legLater");
+    const monthLabel = $("monthLabel"), weekdays = $("weekdays"), grid = $("grid");
+
+    syncStreak();
+    currentStreak.value = state.currentStreak;
+    targetStreak.value = state.targetStreak;
+    inIsrael.checked = state.inIsrael;
+    applyI18n();
+    renderCalendar();
+
+    langBtn.onclick = () => {
+      state.useHebrew = !state.useHebrew;
+      saveState();
+      applyI18n();
+      renderCalendar();
+      if (lastResult) calculate();
+    };
+    inIsrael.onchange = () => {
+      state.inIsrael = inIsrael.checked;
+      saveState();
+      renderCalendar();
+    };
+    currentStreak.onchange = () => {
+      state.currentStreak = Number(currentStreak.value) || 0;
+      state.lastSyncedDay = startOfDay(new Date()).toISOString().slice(0, 10);
+      saveState();
+      renderCalendar();
+    };
+    calcBtn.onclick = calculate;
+    prevMonth.onclick = () => {
+      visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
+      const min = startOfMonth(addDays(new Date(), -365));
+      if (visibleMonth < min) visibleMonth = min;
+      renderCalendar();
+    };
+    nextMonth.onclick = () => {
+      visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
+      const max = startOfMonth(addDays(new Date(), 365));
+      if (visibleMonth > max) visibleMonth = max;
+      renderCalendar();
+    };
+  </script>
+</body>
+</html>
