@@ -4,9 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TefillinCounter" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#1a1510" />
   <title>TefillinCounter</title>
+  <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/icon.png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
   <style>
     :root {
       --gold: #f0c96a;
@@ -107,7 +112,7 @@
       font-weight: 600;
       margin: 10px 0 6px;
     }
-    input[type="number"] {
+    input[type="number"], input[type="date"] {
       width: 100%;
       padding: 12px;
       border-radius: 10px;
@@ -115,6 +120,65 @@
       background: rgba(0,0,0,.28);
       color: #fff;
       font: 500 1rem/1.2 system-ui, sans-serif;
+      color-scheme: dark;
+    }
+    .streak-row {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      margin: 4px 0 10px;
+    }
+    .streak-row input[type="number"] {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+    }
+    .today-btn {
+      flex: 0 0 auto;
+      appearance: none;
+      border-radius: 10px;
+      padding: 0 16px;
+      font: 700 .9rem/1 system-ui, sans-serif;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(240,201,106,.45);
+      color: var(--gold);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .start-panel {
+      margin: 0 0 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .start-panel[hidden] { display: none !important; }
+    .start-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .apply-btn {
+      flex: 1;
+      appearance: none;
+      border-radius: 10px;
+      padding: 11px 12px;
+      border: 0;
+      font: 700 13px/1 system-ui, sans-serif;
+      color: #2a1a08;
+      background: linear-gradient(90deg, #dbad52, #b87a2e);
+      cursor: pointer;
+    }
+    .cancel-btn {
+      flex: 0 0 auto;
+      appearance: none;
+      border-radius: 10px;
+      padding: 11px 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      font: 700 13px/1 system-ui, sans-serif;
+      cursor: pointer;
     }
     .row {
       display: flex;
@@ -253,13 +317,24 @@
       <div class="top-row">
         <button class="lang-btn" id="langBtn" type="button">עב</button>
       </div>
-      <h1 id="title">bringing mashiach with every wrap</h1>
+      <h1 id="title">BRINGING MASHIACH WITH EVERY WRAP</h1>
     </header>
 
     <section class="card">
-      <p class="hint" id="editHint">Editable — updates when you open the app</p>
-      <label id="lblCurrent">Current streak day</label>
-      <input id="currentStreak" type="number" min="0" step="1" />
+      <p class="hint" id="editHint">Tap Today to set your first wrap day — streak recalculates from then</p>
+      <div class="streak-row">
+        <input id="currentStreak" type="number" min="0" step="1" aria-label="Current streak day" />
+        <button class="today-btn" id="todayBtn" type="button">Today</button>
+      </div>
+      <div class="start-panel" id="startPanel" hidden>
+        <label id="lblStart">First wrap day</label>
+        <input id="startDate" type="date" />
+        <p class="hint" id="startHint" style="margin-top:8px;margin-bottom:0">Day 1 is your first wrap day. Streak counts wrap days from then through today.</p>
+        <div class="start-actions">
+          <button class="apply-btn" id="applyStartBtn" type="button">Apply</button>
+          <button class="cancel-btn" id="cancelStartBtn" type="button">Cancel</button>
+        </div>
+      </div>
       <label id="lblTarget">Target streak day</label>
       <input id="targetStreak" type="number" min="1" step="1" />
       <div class="error" id="error" hidden></div>
@@ -275,7 +350,7 @@
     </section>
 
     <section class="card">
-      <h2 id="settingsTitle">Reminders</h2>
+      <h2 id="settingsTitle">Settings</h2>
       <div class="row">
         <span id="lblIsrael">Israel minhag</span>
         <label class="toggle"><input id="inIsrael" type="checkbox" /><span></span></label>
@@ -313,8 +388,12 @@
       en: {
         title: "BRINGING MASHIACH WITH EVERY WRAP",
         langBtn: "עב",
-        editHint: "Editable — updates when you open the page",
-        current: "Current streak day",
+        editHint: "Tap Today to set your first wrap day — streak recalculates from then",
+        today: "Today",
+        start: "First wrap day",
+        startHint: "Day 1 is your first wrap day. Streak counts wrap days from then through today.",
+        apply: "Apply",
+        cancel: "Cancel",
         target: "Target streak day",
         calculate: "Calculate",
         resultTitle: "You will reach that day on",
@@ -328,6 +407,7 @@
         legSkip: "No-wrap day",
         legLater: "Tisha B'Av — wrap at Mincha",
         invalid: "Enter a valid target",
+        invalidStart: "Pick a first wrap day on or before today",
         doNotWrap: "Do not wrap today",
         wrapLater: "Wrap later (Mincha)",
         day: (n) => `Day ${n}`,
@@ -342,8 +422,12 @@
       he: {
         title: "מביאים את המשיח עם כל הנחה",
         langBtn: "EN",
-        editHint: "ניתן לערוך — מתעדכן בפתיחת הדף",
-        current: "יום רצף נוכחי",
+        editHint: "לחץ על ״היום״ כדי לבחור את יום ההנחה הראשון — הרצף יחושב מחדש",
+        today: "היום",
+        start: "יום הנחה ראשון",
+        startHint: "יום 1 הוא יום ההנחה הראשון. הרצף סופר ימי הנחה מאז ועד היום.",
+        apply: "החל",
+        cancel: "ביטול",
         target: "יום יעד",
         calculate: "חשב",
         resultTitle: "תגיע ליום היעד ב־",
@@ -357,6 +441,7 @@
         legSkip: "יום ללא הנחה",
         legLater: "תשעה באב — מניחים במנחה",
         invalid: "הזן יעד חוקי",
+        invalidStart: "בחר יום ראשון שאינו אחרי היום",
         doNotWrap: "היום אין מניחים",
         wrapLater: "מניחים במנחה",
         day: (n) => `יום ${n}`,
@@ -384,7 +469,8 @@
         targetStreak: 100,
         useHebrew: false,
         inIsrael: false,
-        lastSyncedDay: null
+        lastSyncedDay: null,
+        startDate: null
       };
     }
 
@@ -410,6 +496,18 @@
 
     function sameDay(a, b) {
       return startOfDay(a).getTime() === startOfDay(b).getTime();
+    }
+
+    function toKey(d) {
+      const x = startOfDay(d);
+      const y = x.getFullYear();
+      const m = String(x.getMonth() + 1).padStart(2, "0");
+      const day = String(x.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function fromKey(key) {
+      return startOfDay(new Date(key + "T12:00:00"));
     }
 
     function hebrewInfo(date) {
@@ -500,16 +598,62 @@
       return count;
     }
 
+    /** Inclusive wrap-day count from startDate through asOf. */
+    function streakFromStart(startKey, asOf) {
+      if (!startKey) return null;
+      let cursor = fromKey(startKey);
+      const end = startOfDay(asOf);
+      if (cursor > end) return 0;
+      let n = 0;
+      while (cursor <= end) {
+        if (isWrap(cursor)) n++;
+        cursor = addDays(cursor, 1);
+      }
+      return n;
+    }
+
+    function applyStartDate(startKey) {
+      const L = t();
+      const today = startOfDay(new Date());
+      const start = fromKey(startKey);
+      if (start > today) {
+        error.hidden = false;
+        error.textContent = L.invalidStart;
+        return false;
+      }
+      let first = start;
+      for (let i = 0; i < 40 && !isWrap(first); i++) first = addDays(first, 1);
+      if (!isWrap(first)) first = start;
+
+      state.startDate = toKey(first);
+      state.currentStreak = streakFromStart(state.startDate, today);
+      state.lastSyncedDay = toKey(today);
+      currentStreak.value = state.currentStreak;
+      saveState();
+      error.hidden = true;
+      startPanel.hidden = true;
+      renderCalendar();
+      return true;
+    }
+
     function syncStreak() {
       const today = startOfDay(new Date());
-      const key = today.toISOString().slice(0, 10);
+      const key = toKey(today);
+
+      if (state.startDate) {
+        state.currentStreak = streakFromStart(state.startDate, today);
+        state.lastSyncedDay = key;
+        saveState();
+        return;
+      }
+
       if (!state.lastSyncedDay) {
         state.lastSyncedDay = key;
         saveState();
         return;
       }
       if (state.lastSyncedDay === key) return;
-      const last = startOfDay(new Date(state.lastSyncedDay + "T12:00:00"));
+      const last = fromKey(state.lastSyncedDay);
       const added = wrappingDaysAfter(last, today);
       if (added > 0) state.currentStreak += added;
       state.lastSyncedDay = key;
@@ -589,7 +733,11 @@
       title.textContent = L.title;
       langBtn.textContent = L.langBtn;
       editHint.textContent = L.editHint;
-      lblCurrent.textContent = L.current;
+      todayBtn.textContent = L.today;
+      lblStart.textContent = L.start;
+      startHint.textContent = L.startHint;
+      applyStartBtn.textContent = L.apply;
+      cancelStartBtn.textContent = L.cancel;
       lblTarget.textContent = L.target;
       calcBtn.textContent = L.calculate;
       resultTitle.textContent = L.resultTitle;
@@ -650,7 +798,7 @@
       const target = Number(targetStreak.value);
       state.currentStreak = current;
       state.targetStreak = target;
-      state.lastSyncedDay = startOfDay(new Date()).toISOString().slice(0, 10);
+      state.lastSyncedDay = toKey(new Date());
       saveState();
 
       if (!target || target < 1) {
@@ -691,7 +839,10 @@
     // wire UI
     const $ = (id) => document.getElementById(id);
     const title = $("title"), langBtn = $("langBtn"), editHint = $("editHint");
-    const lblCurrent = $("lblCurrent"), lblTarget = $("lblTarget"), calcBtn = $("calcBtn");
+    const todayBtn = $("todayBtn"), startPanel = $("startPanel"), startDate = $("startDate");
+    const lblStart = $("lblStart"), startHint = $("startHint");
+    const applyStartBtn = $("applyStartBtn"), cancelStartBtn = $("cancelStartBtn");
+    const lblTarget = $("lblTarget"), calcBtn = $("calcBtn");
     const currentStreak = $("currentStreak"), targetStreak = $("targetStreak"), error = $("error");
     const resultCard = $("resultCard"), resultTitle = $("resultTitle"), resultDay = $("resultDay");
     const lblGreg = $("lblGreg"), lblHeb = $("lblHeb"), resultGreg = $("resultGreg"), resultHeb = $("resultHeb"), resultNote = $("resultNote");
@@ -703,8 +854,23 @@
     currentStreak.value = state.currentStreak;
     targetStreak.value = state.targetStreak;
     inIsrael.checked = state.inIsrael;
+    startDate.value = state.startDate || toKey(new Date());
+    startDate.max = toKey(new Date());
     applyI18n();
     renderCalendar();
+
+    todayBtn.onclick = () => {
+      startPanel.hidden = !startPanel.hidden;
+      if (!startPanel.hidden) {
+        startDate.value = state.startDate || toKey(new Date());
+        startDate.focus();
+      }
+    };
+    applyStartBtn.onclick = () => {
+      if (!startDate.value) return;
+      applyStartDate(startDate.value);
+    };
+    cancelStartBtn.onclick = () => { startPanel.hidden = true; };
 
     langBtn.onclick = () => {
       state.useHebrew = !state.useHebrew;
@@ -715,12 +881,17 @@
     };
     inIsrael.onchange = () => {
       state.inIsrael = inIsrael.checked;
+      if (state.startDate) {
+        state.currentStreak = streakFromStart(state.startDate, new Date());
+        currentStreak.value = state.currentStreak;
+      }
       saveState();
       renderCalendar();
     };
     currentStreak.onchange = () => {
       state.currentStreak = Number(currentStreak.value) || 0;
-      state.lastSyncedDay = startOfDay(new Date()).toISOString().slice(0, 10);
+      state.startDate = null;
+      state.lastSyncedDay = toKey(new Date());
       saveState();
       renderCalendar();
     };
@@ -737,6 +908,10 @@
       if (visibleMonth > max) visibleMonth = max;
       renderCalendar();
     };
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
   </script>
 </body>
 </html>
