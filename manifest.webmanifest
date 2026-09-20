@@ -1,0 +1,23 @@
+{
+  "name": "TefillinCounter",
+  "short_name": "Tefillin",
+  "description": "Tefillin streak calendar — bringing mashiach with every wrap. By AdyrStudios.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#120e0a",
+  "theme_color": "#1a1510",
+  "icons": [
+    {
+      "src": "assets/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
